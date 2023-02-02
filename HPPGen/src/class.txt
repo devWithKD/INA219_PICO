@@ -1,0 +1,18 @@
+
+
+class INA219
+{
+private:
+    uint8_t ADDR;
+    i2c_inst_t * i2c;
+    
+public:
+    INA219(i2c_inst_t * i2c, uint8_t addr);
+    ~INA219();
+    void init();
+    void calibrate();
+    double readCurrent();
+    double readPower();
+};
+
+#endif

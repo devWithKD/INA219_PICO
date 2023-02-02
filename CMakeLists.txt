@@ -15,8 +15,9 @@ pico_sdk_init()
 # Tell CMake where to find the executable source file
 add_executable(${PROJECT_NAME} 
     Example.cpp
-    INA219.cpp
+    ./include/INA219.cpp
 )
+
 
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${PROJECT_NAME})

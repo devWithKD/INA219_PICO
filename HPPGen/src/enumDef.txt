@@ -1,0 +1,114 @@
+#ifndef _INA219_PICO_HPP
+#define _INA219_PICO_HPP
+
+#include "stdio.h"
+#include "pico/stdlib.h"
+#include "pico/binary_info.h"
+#include "hardware/i2c.h"
+#include "math.h"
+
+#define DEFAULT_RSHUNT 0.001
+
+/*!
+*   @brief A0 & A1 can take values form 0 to 3 depending on their connection with pins
+*   GND ---------------------- 0
+*   VCC ---------------------- 1
+*   SDA ---------------------- 2
+*   SCL ---------------------- 3
+*/
+#define INA219_DEFUALT_ADDR 0x40
+/*Default values of A0, A1*/
+#define INA219_ADDR0 0                      
+#define INA219_ADDR1 0                      
+
+/*INA219 Registers*/
+#define INA219_CONFIG_REG 0x00  // config register address
+#define INA219_shuntV_REG 0x01  // shunt voltage register
+#define INA219_busV_REG 0x02  // bus voltage register 
+#define INA219_POWER_REG 0x03  // power register 
+#define INA219_CURRENT_REG 0x04  // current register 
+#define INA219_CALIBRATION_REG 0x05  // calibration register 
+/*----------------*/
+
+/*--------------------------------------------------------------------------------------------------
+                                INA219 Configuration Registers
+--------------------------------------------------------------------------------------------------*/
+/* Configuration Reset Bit */
+#define INA219_CONFIG_RESET 0x8000  // Configuration Reset Bit 
+
+/* Bus Voltage Range Mask */
+#define INA219_busV_RANGE_MASK 0x2000  // Bus Voltage Range mask bit
+
+/* Bus Voltage Range Values */
+enum{
+    INA219_busV_RANGE_16 = (0x0000),  // 0-16V range
+    INA219_busV_RANGE_32 = (0x2000),  // 0-32V range
+};
+
+/* Gain Mask */
+#define INA219_CONFIG_GAIN_MASK 0x1800  // Gain mask bit
+
+/* Gain Values */
+enum{
+    INA219_CONFIG_GAIN_1_40mv = (0x0000),  // Gain 1/1, 40mV Range
+    INA219_CONFIG_GAIN_2_80mv = (0x0800),  // Gain 1/2, 80mV Range
+    INA219_CONFIG_GAIN_4_160mv = (0x1000),  // Gain 1/4, 160mV Range
+    INA219_CONFIG_GAIN_8_320mv = (0x1800),  // Gain 1/8, 320mV range
+};
+
+/* Bus ADC Resolution Mask */
+#define INA219_busV_ADC_MASK 0x0780  // Bus ADC Resolution Mask bit
+
+/* Bus ADC Resolution Values */
+enum{
+    INA219_busV_ADC_9_BIT = (0x0000),  // 9Bit 0-511
+    INA219_busV_ADC_10_BIT = (0x0080),  // 10Bt 0-1023
+    INA219_busV_ADC_11_BIT = (0x0100),  // 11Bit 0-2047
+    INA219_busV_ADC_12_BIT = (0x0180),  // 12Bit 0-4095
+    INA219_busV_ADC_12_BIT_2S = (0x0480),  // 12Bit Averageing every 2 samples
+    INA219_busV_ADC_12_BIT_4S = (0x0500),  // 12Bit Averageing every 4 samples
+    INA219_busV_ADC_12_BIT_8S = (0x0580),  // 12Bit Averageing every 8 samples
+    INA219_busV_ADC_12_BIT_16S = (0x0600),  // 12Bit Averageing every 16 samples
+    INA219_busV_ADC_12_BIT_32S = (0x0680),  // 12Bit Averageing every 32 samples
+    INA219_busV_ADC_12_BIT_64S = (0x0700),  // 12Bit Averageing every 64 samples
+    INA219_busV_ADC_12_BIT_128S = (0x0780),  // 12Bit Averageing every 128 samples
+};
+
+/* Shunt ADC Resolution Mask */
+#define INA219_shuntV_ADC_MASK 0x0078  // Shunt ADC Resolution Mask bit
+
+/* Shunt ADC Resolution Values */
+enum{
+    INA219_shuntV_ADC_9_BIT = (0x0000),  // 9Bit 0-511
+    INA219_shuntV_ADC_10_BIT = (0x0008),  // 10Bt 0-1023
+    INA219_shuntV_ADC_11_BIT = (0x0010),  // 11Bit 0-2047
+    INA219_shuntV_ADC_12_BIT = (0x0018),  // 12Bit 0-4095
+    INA219_shuntV_ADC_12_BIT_2S = (0x0048),  // 12Bit Averageing every 2 samples
+    INA219_shuntV_ADC_12_BIT_4S = (0x0050),  // 12Bit Averageing every 4 samples
+    INA219_shuntV_ADC_12_BIT_8S = (0x0058),  // 12Bit Averageing every 8 samples
+    INA219_shuntV_ADC_12_BIT_16S = (0x0060),  // 12Bit Averageing every 16 samples
+    INA219_shuntV_ADC_12_BIT_32S = (0x0068),  // 12Bit Averageing every 32 samples
+    INA219_shuntV_ADC_12_BIT_64S = (0x0070),  // 12Bit Averageing every 64 samples
+    INA219_shuntV_ADC_12_BIT_128S = (0x0078),  // 12Bit Averageing every 128 samples
+};
+
+/* Mode Selection Mask */
+#define INA219_CONFIG_MODE_MASK 0x0007  // Mode Selection Mask bit
+
+/* Mode Selection Values */
+enum{
+    INA219_CONFIG_POWERDOWN = (0x0000),  // Power Down
+    INA219_CONFIG_shuntV_TRIGGRED = (0x0001),  // Shunt voltage, triggered
+    INA219_CONFIG_busV_TRIGGRED = (0x0002),  // Bus voltage, triggered
+    INA219_CONFIG_shuntV_AND_busV_TRIGGRED = (0x0003),  // Shunt and Bsus voltage, triggered
+    INA219_CONFIG_ADCOFF = (0x0004), // ADC off (disabled)
+    INA219_CONFIG_shuntV_CONTINUOUS = (0x0005),  // Shunt voltage, continuous
+    INA219_CONFIG_busV_CONTINUOUS = (0x0006),  // Bus voltage, continuous
+    INA219_CONFIG_shuntV_AND_busV_CONTINUOUS = (0x0007),  // Shunt and Bus voltage, continuous
+};
+
+#define SDA 4
+#define SCL 5
+#define I2C i2c0
+#define PCF8575_addr 0x40
+

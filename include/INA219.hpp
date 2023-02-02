@@ -1,11 +1,13 @@
 #ifndef _INA219_PICO_HPP
 #define _INA219_PICO_HPP
 
-#include <stdio.h>
-#include <string.h>
+#include "stdio.h"
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
+#include "math.h"
+
+#define DEFAULT_RSHUNT 0.001
 
 /*!
 *   @brief A0 & A1 can take values form 0 to 3 depending on their connection with pins
@@ -14,7 +16,7 @@
 *   SDA ---------------------- 2
 *   SCL ---------------------- 3
 */
-
+#define INA219_DEFUALT_ADDR 0x40
 /*Default values of A0, A1*/
 #define INA219_ADDR0 0                      
 #define INA219_ADDR1 0                      
@@ -25,7 +27,7 @@
 #define INA219_busV_REG 0x02  // bus voltage register 
 #define INA219_POWER_REG 0x03  // power register 
 #define INA219_CURRENT_REG 0x04  // current register 
-#define INA219_busV_REG 0x05  // calibration register 
+#define INA219_CALIBRATION_REG 0x05  // calibration register 
 /*----------------*/
 
 /*--------------------------------------------------------------------------------------------------
@@ -102,7 +104,39 @@ enum{
     INA219_CONFIG_ADCOFF = (0x0004), // ADC off (disabled)
     INA219_CONFIG_shuntV_CONTINUOUS = (0x0005),  // Shunt voltage, continuous
     INA219_CONFIG_busV_CONTINUOUS = (0x0006),  // Bus voltage, continuous
-    INA219_CONFIG_shuntV_AND_busV_CONTINUOUS = (0x0007),  // Shunt and Bsus voltage, continuous
+    INA219_CONFIG_shuntV_AND_busV_CONTINUOUS = (0x0007),  // Shunt and Bus voltage, continuous
+};
+
+#define SDA 4
+#define SCL 5
+#define I2C i2c0
+#define PCF8575_addr 0x40
+
+
+
+#define VBUS_MAX 32.0
+#define VSHUNT_MAX 0.32
+#define RSHUNT 0.01
+#define MaxExpected_I 30.0
+
+#define CALVAL 4551
+#define Current_LSB 0.0009
+#define Power_LSB 0.018
+
+
+class INA219
+{
+private:
+    uint8_t ADDR;
+    i2c_inst_t * i2c;
+    
+public:
+    INA219(i2c_inst_t * i2c, uint8_t addr);
+    ~INA219();
+    void init();
+    void calibrate();
+    double readCurrent();
+    double readPower();
 };
 
 #endif
